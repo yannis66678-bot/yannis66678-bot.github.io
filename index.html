@@ -1,1 +1,624 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Battle - Lehrer Ranking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* Battle Area */
+        .battle-area {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+            min-height: 400px;
+        }
+        
+        .teacher-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        
+        .teacher-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .teacher-card.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+        }
+        
+        .avatar {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .teacher-name {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .teacher-subject {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .choose-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+        
+        .choose-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .vs-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .vs {
+            font-size: 3rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .timer-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .timer {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .timer-text {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* Leaderboard */
+        .leaderboard-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .leaderboard-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .leaderboard {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 100px;
+            gap: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .leaderboard-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .leaderboard-row.top-3 {
+            background: rgba(255, 215, 0, 0.2);
+            border-left: 5px solid gold;
+        }
+        
+        .rank {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .teacher-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .teacher-small-avatar {
+            font-size: 2rem;
+        }
+        
+        .teacher-small-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .points {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: right;
+        }
+        
+        .win-rate {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        .result-message {
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 20px 0;
+            min-height: 40px;
+            color: #4CAF50;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .battle-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto 1fr;
+                gap: 10px;
+            }
+            
+            .vs-container {
+                order: 2;
+            }
+            
+            .teacher-card {
+                padding: 20px;
+            }
+            
+            .avatar {
+                font-size: 3rem;
+            }
+            
+            .teacher-name {
+                font-size: 1.5rem;
+            }
+            
+            .leaderboard-row {
+                grid-template-columns: 40px 1fr 80px;
+            }
+            
+            .win-rate {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Rate Battle</h1>
+            <p class="subtitle">Wer ist der bessere Lehrer? Entscheide in 10 Sekunden!</p>
+        </header>
+        
+        <div class="timer-container">
+            <div class="timer" id="timer">10</div>
+            <div class="timer-text">Sekunden verbleibend</div>
+        </div>
+        
+        <div class="result-message" id="resultMessage"></div>
+        
+        <div class="battle-area">
+            <div class="teacher-card" id="teacherA" onclick="selectTeacher('A')">
+                <div class="avatar" id="avatarA">👨‍🏫</div>
+                <div class="teacher-name" id="nameA">Lehrer A</div>
+                <div class="teacher-subject" id="subjectA">Fach A</div>
+                <button class="choose-btn" onclick="selectTeacher('A')">WÄHLEN</button>
+            </div>
+            
+            <div class="vs-container">
+                <div class="vs">VS</div>
+            </div>
+            
+            <div class="teacher-card" id="teacherB" onclick="selectTeacher('B')">
+                <div class="avatar" id="avatarB">👩‍🏫</div>
+                <div class="teacher-name" id="nameB">Lehrer B</div>
+                <div class="teacher-subject" id="subjectB">Fach B</div>
+                <button class="choose-btn" onclick="selectTeacher('B')">WÄHLEN</button>
+            </div>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="battlesCount">0</div>
+                <div class="stat-label">Battles</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="todayPoints">0</div>
+                <div class="stat-label">Punkte heute</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="streakCount">0</div>
+                <div class="stat-label">Tage Streak</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="skipBattle()">Überspringen</button>
+            <button class="btn btn-secondary" onclick="showLeaderboard()">Leaderboard anzeigen</button>
+        </div>
+        
+        <div class="leaderboard-container" id="leaderboardContainer" style="display: none;">
+            <h2 class="leaderboard-title">🏆 Lehrer Ranking</h2>
+            <div class="leaderboard" id="leaderboard">
+                <!-- Leaderboard wird hier eingefügt -->
+            </div>
+            <div class="controls" style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="hideLeaderboard()">Schließen</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        // Initiale Lehrer-Datenbank
+        const teachers = [
+            { id: 1, name: "Herr Müller", subject: "Mathe", points: 1000, battles: 0, wins: 0, avatar: "👨‍🏫" },
+            { id: 2, name: "Frau Schmidt", subject: "Deutsch", points: 1000, battles: 0, wins: 0, avatar: "👩‍🏫" },
+            { id: 3, name: "Herr Bauer", subject: "Physik", points: 1000, battles: 0, wins: 0, avatar: "👨‍🔬" },
+            { id: 4, name: "Frau Koch", subject: "Chemie", points: 1000, battles: 0, wins: 0, avatar: "👩‍🔬" },
+            { id: 5, name: "Herr Wagner", subject: "Sport", points: 1000, battles: 0, wins: 0, avatar: "🏃‍♂️" },
+            { id: 6, name: "Frau Weber", subject: "Kunst", points: 1000, battles: 0, wins: 0, avatar: "🎨" },
+            { id: 7, name: "Herr Schulz", subject: "Musik", points: 1000, battles: 0, wins: 0, avatar: "🎵" },
+            { id: 8, name: "Frau Fischer", subject: "Geschichte", points: 1000, battles: 0, wins: 0, avatar: "📜" }
+        ];
+
+        // Cookie Management
+        function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for(let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if(key === name) {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return null;
+        }
+
+        function setCookie(name, value, days = 30) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${date.toUTCString()};path=/`;
+        }
+
+        // App State
+        let currentBattle = null;
+        let timer = 10;
+        let timerInterval = null;
+        let selectedTeacher = null;
+        let battlesCount = 0;
+        let streakCount = 0;
+
+        // Initialisierung
+        function init() {
+            loadFromCookies();
+            startNewBattle();
+            updateStats();
+        }
+
+        function loadFromCookies() {
+            const savedTeachers = getCookie('ratebattle_teachers');
+            if(savedTeachers) {
+                teachers.length = 0;
+                teachers.push(...savedTeachers);
+            }
+            
+            const stats = getCookie('ratebattle_stats');
+            if(stats) {
+                battlesCount = stats.battles || 0;
+                streakCount = stats.streak || 0;
+            }
+        }
+
+        function saveToCookies() {
+            setCookie('ratebattle_teachers', teachers);
+            setCookie('ratebattle_stats', { 
+                battles: battlesCount,
+                streak: streakCount,
+                lastBattle: new Date().toISOString()
+            });
+        }
+
+        // Battle Logic
+        function startNewBattle() {
+            clearInterval(timerInterval);
+            selectedTeacher = null;
+            timer = 10;
+            document.getElementById('timer').textContent = timer;
+            document.getElementById('timer').style.color = '#4CAF50';
+            document.getElementById('resultMessage').textContent = '';
+            
+            // Reset card styles
+            document.getElementById('teacherA').classList.remove('selected');
+            document.getElementById('teacherB').classList.remove('selected');
+            
+            // Select two random teachers
+            const shuffled = [...teachers].sort(() => Math.random() - 0.5);
+            currentBattle = {
+                teacherA: shuffled[0],
+                teacherB: shuffled[1]
+            };
+            
+            // Update UI
+            updateTeacherCard('A', currentBattle.teacherA);
+            updateTeacherCard('B', currentBattle.teacherB);
+            
+            // Start timer
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTeacherCard(side, teacher) {
+            document.getElementById(`avatar${side}`).textContent = teacher.avatar;
+            document.getElementById(`name${side}`).textContent = teacher.name;
+            document.getElementById(`subject${side}`).textContent = teacher.subject;
+        }
+
+        function updateTimer() {
+            timer--;
+            document.getElementById('timer').textContent = timer;
+            
+            // Color coding
+            if(timer <= 3) {
+                document.getElementById('timer').style.color = '#ff4444';
+            } else if(timer <= 6) {
+                document.getElementById('timer').style.color = '#ffbb33';
+            }
+            
+            if(timer <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('resultMessage').textContent = "⏰ Zeit abgelaufen!";
+                setTimeout(startNewBattle, 2000);
+            }
+        }
+
+        function selectTeacher(side) {
+            if(selectedTeacher || timer <= 0) return;
+            
+            selectedTeacher = side === 'A' ? currentBattle.teacherA : currentBattle.teacherB;
+            const otherTeacher = side === 'A' ? currentBattle.teacherB : currentBattle.teacherA;
+            
+            // Visual feedback
+            document.getElementById(`teacher${side}`).classList.add('selected');
+            
+            // Calculate ELO points (simplified)
+            const kFactor = 32;
+            const expectedA = 1 / (1 + Math.pow(10, (otherTeacher.points - selectedTeacher.points) / 400));
+            
+            selectedTeacher.points += Math.round(kFactor * (1 - expectedA));
+            selectedTeacher.battles++;
+            selectedTeacher.wins++;
+            
+            otherTeacher.points -= Math.round(kFactor * (0 - (1 - expectedA)));
+            otherTeacher.battles++;
+            
+            // Update battle count
+            battlesCount++;
+            
+            // Clear timer
+            clearInterval(timerInterval);
+            
+            // Show result
+            document.getElementById('resultMessage').textContent = 
+                `✅ ${selectedTeacher.name} gewinnt! (+${Math.round(kFactor * (1 - expectedA))} Punkte)`;
+            
+            // Save and continue
+            saveToCookies();
+            updateStats();
+            updateLeaderboard();
+            
+            setTimeout(startNewBattle, 1500);
+        }
+
+        function skipBattle() {
+            clearInterval(timerInterval);
+            document.getElementById('resultMessage').textContent = "⏭️ Battle übersprungen";
+            setTimeout(startNewBattle, 1000);
+        }
+
+        // Stats and Leaderboard
+        function updateStats() {
+            document.getElementById('battlesCount').textContent = battlesCount;
+            document.getElementById('todayPoints').textContent = 
+                teachers.reduce((sum, t) => sum + t.points - 1000, 0);
+            document.getElementById('streakCount').textContent = streakCount;
+        }
+
+        function showLeaderboard() {
+            updateLeaderboard();
+            document.getElementById('leaderboardContainer').style.display = 'block';
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('leaderboardContainer').style.display = 'none';
+        }
+
+        function updateLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = '';
+            
+            // Sort teachers by points
+            const sortedTeachers = [...teachers]
+                .filter(t => t.battles > 0)
+                .sort((a, b) => b.points - a.points)
+                .slice(0, 10);
+            
+            // Add ranking
+            sortedTeachers.forEach((teacher, index) => {
+                const winRate = teacher.battles > 0 ? 
+                    Math.round((teacher.wins / teacher.battles) * 100) : 0;
+                
+                const row = document.createElement('div');
+                row.className = `leaderboard-row ${index < 3 ? 'top-3' : ''}`;
+                row.innerHTML = `
+                    <div class="rank">${index + 1}</div>
+                    <div class="teacher-info">
+                        <div class="teacher-small-avatar">${teacher.avatar}</div>
+                        <div>
+                            <div class="teacher-small-name">${teacher.name}</div>
+                            <div style="opacity:0.7; font-size:0.9rem">${teacher.subject}</div>
+                        </div>
+                    </div>
+                    <div class="points">${teacher.points}</div>
+                    <div class="win-rate">${winRate}%</div>
+                `;
+                
+                leaderboard.appendChild(row);
+            });
+            
+            // If no teachers have been rated yet
+            if(sortedTeachers.length === 0) {
+                leaderboard.innerHTML = `
+                    <div style="text-align:center; padding:40px; opacity:0.7">
+                        Noch keine Battles durchgeführt!<br>
+                        Starte das erste Battle um das Ranking zu sehen.
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
